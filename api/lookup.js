@@ -1,16 +1,30 @@
+import { getClientIP, checkRateLimit } from './_rateLimit.js';
+
+// 20 lookups per minute per IP
+const RATE_LIMIT = 20;
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limiting
+  const clientIP = getClientIP(req);
+  const rate = checkRateLimit(clientIP, 'lookup', RATE_LIMIT);
+  res.setHeader('X-RateLimit-Limit',     RATE_LIMIT);
+  res.setHeader('X-RateLimit-Remaining', rate.remaining);
+  res.setHeader('X-RateLimit-Reset',     rate.resetIn);
+  if (!rate.allowed) {
+    return res.status(429).json({
+      error: `Too many requests. Please wait ${rate.resetIn} seconds before trying again.`,
+    });
+  }
+
   let { ip } = req.query;
 
   if (!ip) {
-    // Extract the real client IP from Vercel/proxy forwarding headers
-    const forwarded = req.headers['x-forwarded-for'];
-    ip = forwarded
-      ? forwarded.split(',')[0].trim()
-      : (req.headers['x-real-ip'] || req.socket?.remoteAddress || '');
+    // Use the already-extracted client IP for auto-detect
+    ip = clientIP;
   }
 
   // Strip IPv6-mapped IPv4 prefix (e.g. ::ffff:1.2.3.4 → 1.2.3.4)
@@ -19,7 +33,7 @@ export default async function handler(req, res) {
   }
 
   // Fallback for local development (localhost resolves to loopback)
-  if (!ip || ip === '::1' || ip === '127.0.0.1') {
+  if (!ip || ip === '::1' || ip === '127.0.0.1' || ip === 'localhost') {
     ip = '8.8.8.8';
   }
 

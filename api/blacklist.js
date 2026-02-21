@@ -1,4 +1,8 @@
 import { promises as dns } from 'dns';
+import { getClientIP, checkRateLimit } from './_rateLimit.js';
+
+// 20 blacklist checks per minute per IP
+const RATE_LIMIT = 20;
 
 const LISTS = [
   { name: 'SpamCop',    host: 'bl.spamcop.net',         desc: 'Known spam sources' },
@@ -51,6 +55,18 @@ async function checkList(reversedIP, list) {
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limiting
+  const clientIP = getClientIP(req);
+  const rate = checkRateLimit(clientIP, 'blacklist', RATE_LIMIT);
+  res.setHeader('X-RateLimit-Limit',     RATE_LIMIT);
+  res.setHeader('X-RateLimit-Remaining', rate.remaining);
+  res.setHeader('X-RateLimit-Reset',     rate.resetIn);
+  if (!rate.allowed) {
+    return res.status(429).json({
+      error: `Too many requests. Please wait ${rate.resetIn} seconds before trying again.`,
+    });
   }
 
   const { ip } = req.query;
