@@ -130,6 +130,60 @@ function displayResults(data) {
 
   const locationLabel = [data.city, data.country].filter(Boolean).join(', ');
   updateMap(data.latitude, data.longitude, locationLabel);
+
+  checkBlacklist(data.ip);
+}
+
+// ── Blacklist / RBL Check ──────────────────────────────────────────
+async function checkBlacklist(ip) {
+  const loading = document.getElementById('rep-loading');
+  const grid    = document.getElementById('rep-grid');
+  const summary = document.getElementById('rep-summary');
+
+  loading.classList.remove('hidden');
+  grid.classList.add('hidden');
+  summary.classList.add('hidden');
+  grid.innerHTML = '';
+
+  try {
+    const res  = await fetch(`/api/blacklist?ip=${encodeURIComponent(ip)}`);
+    const data = await res.json();
+
+    if (!res.ok) { loading.classList.add('hidden'); return; }
+
+    loading.classList.add('hidden');
+
+    // Build result cards
+    data.checks.forEach(check => {
+      const card = document.createElement('div');
+      card.className = `rep-card ${check.listed ? 'rep-listed' : check.error ? 'rep-error' : 'rep-clean'}`;
+
+      const statusText  = check.error  ? 'Unavailable' : check.listed ? 'Listed' : 'Clean';
+      const statusIcon  = check.error  ? '⚠️' : check.listed ? '❌' : '✅';
+
+      card.innerHTML = `
+        <div class="rep-card-top">
+          <span class="rep-name">${check.name}</span>
+          <span class="rep-badge">${statusIcon} ${statusText}</span>
+        </div>
+        <div class="rep-desc">${check.desc}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Summary badge
+    const { listedCount, total } = data;
+    summary.className = 'rep-summary ' +
+      (listedCount === 0 ? 'rep-sum-clean' : listedCount === 1 ? 'rep-sum-warn' : 'rep-sum-danger');
+    summary.textContent = listedCount === 0
+      ? `✅ Clean — 0 of ${total} lists`
+      : `❌ Listed on ${listedCount} of ${total} lists`;
+    summary.classList.remove('hidden');
+
+    grid.classList.remove('hidden');
+  } catch {
+    loading.classList.add('hidden');
+  }
 }
 
 // ── GPS Location ───────────────────────────────────────────────────
