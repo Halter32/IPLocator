@@ -1,6 +1,7 @@
 // ── State ──────────────────────────────────────────────────────────
 let map = null;
 let marker = null;
+let gpsMarker = null;
 let mapsReady = false;
 let pendingMapUpdate = null;
 
@@ -122,9 +123,72 @@ function displayResults(data) {
   }
 
   document.getElementById('results').classList.remove('hidden');
+  document.getElementById('map-pin-label').innerHTML = '&#128205; IP Location';
+
+  // Clear any previous GPS marker when doing a fresh IP lookup
+  if (gpsMarker) { gpsMarker.setMap(null); gpsMarker = null; }
 
   const locationLabel = [data.city, data.country].filter(Boolean).join(', ');
   updateMap(data.latitude, data.longitude, locationLabel);
+}
+
+// ── GPS Location ───────────────────────────────────────────────────
+function getGPSLocation() {
+  if (!navigator.geolocation) {
+    showError('Your browser does not support GPS location.');
+    return;
+  }
+
+  const btn = document.getElementById('gps-btn');
+  btn.textContent = '⏳ Locating…';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      btn.textContent = '🎯 Use My GPS Location';
+      btn.disabled = false;
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const position = { lat, lng };
+
+      // Remove old GPS marker if present
+      if (gpsMarker) gpsMarker.setMap(null);
+
+      gpsMarker = new google.maps.Marker({
+        position,
+        map,
+        title: 'Your GPS Location',
+        animation: google.maps.Animation.DROP,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#10b981',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        },
+      });
+
+      map.panTo(position);
+      map.setZoom(14);
+
+      document.getElementById('map-pin-label').innerHTML =
+        '&#127919; GPS Location <span class="pin-note">(green pin)</span>';
+    },
+    (err) => {
+      btn.textContent = '🎯 Use My GPS Location';
+      btn.disabled = false;
+
+      const messages = {
+        1: 'Location access was denied. Please allow it in your browser settings.',
+        2: 'Your location could not be determined.',
+        3: 'Location request timed out. Please try again.',
+      };
+      showError(messages[err.code] || 'Could not get GPS location.');
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
 }
 
 // ── Event Listeners ────────────────────────────────────────────────
@@ -138,6 +202,8 @@ document.getElementById('detect-btn').addEventListener('click', () => {
   document.getElementById('ip-input').value = '';
   lookupIP(null);
 });
+
+document.getElementById('gps-btn').addEventListener('click', getGPSLocation);
 
 document.getElementById('ip-input').addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
