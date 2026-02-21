@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IP Locator</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="page">
+
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">&#127758;</span>
+          <h1>IP Locator</h1>
+        </div>
+        <p class="tagline">Trace any IP address to its real-world location</p>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- Search -->
+      <section class="search-section">
+        <div class="search-card">
+          <div class="search-row">
+            <div class="input-wrapper">
+              <span class="input-icon">&#128269;</span>
+              <input
+                type="text"
+                id="ip-input"
+                placeholder="Enter IPv4 or IPv6 address..."
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <button id="lookup-btn" class="btn btn-primary">Lookup</button>
+          </div>
+          <div class="divider"><span>or</span></div>
+          <button id="detect-btn" class="btn btn-outline btn-full">
+            &#128205;&nbsp; Detect My IP Address
+          </button>
+        </div>
+      </section>
+
+      <!-- Loading -->
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Locating address&hellip;</span>
+      </div>
+
+      <!-- Error -->
+      <div id="error-box" class="error-box hidden">
+        <span class="error-icon">&#9888;</span>
+        <p id="error-msg"></p>
+      </div>
+
+      <!-- Results -->
+      <section id="results" class="results hidden">
+
+        <div class="results-header">
+          <div class="ip-badge">
+            <span class="badge-label">IP Address</span>
+            <span id="result-ip" class="badge-value"></span>
+            <span id="result-flag" class="badge-flag"></span>
+          </div>
+        </div>
+
+        <div class="results-grid">
+
+          <!-- Info Cards -->
+          <div class="info-panel">
+            <div class="info-grid">
+
+              <div class="info-card">
+                <span class="info-icon">&#127961;</span>
+                <div class="info-body">
+                  <div class="info-label">City</div>
+                  <div class="info-value" id="r-city">—</div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <span class="info-icon">&#128506;</span>
+                <div class="info-body">
+                  <div class="info-label">Region</div>
+                  <div class="info-value" id="r-region">—</div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <span class="info-icon">&#127757;</span>
+                <div class="info-body">
+                  <div class="info-label">Country</div>
+                  <div class="info-value" id="r-country">—</div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <span class="info-icon">&#128225;</span>
+                <div class="info-body">
+                  <div class="info-label">ISP / Organization</div>
+                  <div class="info-value" id="r-isp">—</div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <span class="info-icon">&#128336;</span>
+                <div class="info-body">
+                  <div class="info-label">Timezone</div>
+                  <div class="info-value" id="r-timezone">—</div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <span class="info-icon">&#128205;</span>
+                <div class="info-body">
+                  <div class="info-label">Coordinates</div>
+                  <div class="info-value" id="r-coords">—</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Map -->
+          <div class="map-panel">
+            <div id="map"></div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <p>Powered by <a href="https://ipapi.co" target="_blank" rel="noopener">ipapi.co</a> &amp; Google Maps</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+  <!--
+    Replace YOUR_GOOGLE_MAPS_API_KEY below with your actual key.
+    Get one at: https://console.cloud.google.com/google/maps-apis/
+    Enable: Maps JavaScript API
+    Restrict the key to your deployed domain for security.
+  -->
+  <script
+    async
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"
+  ></script>
+</body>
+</html>

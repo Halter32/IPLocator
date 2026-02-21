@@ -1,0 +1,12 @@
+{
+  "name": "ip-locator",
+  "version": "1.0.0",
+  "description": "IP address geolocation tool using ipapi.co and Google Maps",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}
